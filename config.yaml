@@ -20,6 +20,10 @@ pagination:
   disableAliases: false
   pagerSize: 5
 
+caches:
+  images:
+    dir: :cacheDir/images
+
 menu:
   main:
     - identifier: categories
