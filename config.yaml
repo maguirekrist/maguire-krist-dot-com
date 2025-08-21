@@ -26,14 +26,14 @@ caches:
 
 menu:
   main:
-    - identifier: categories
-      name: categories
-      url: /categories/
-      weight: 10
+    # - identifier: categories
+    #   name: categories
+    #   url: /categories/
+    #   weight: 10
     - identifier: tags
       name: tags
       url: /tags/
-      weight: 20
+      weight: 10
 
 params:
   env: production
@@ -46,15 +46,15 @@ params:
   ShowPostNavLinks: true
   ShowBreadCrumbs: true
   ShowCodeCopyButtons: true
-  ShowRssButtonInSectionTermList: true
+  ShowRssButtonInSectionTermList: false
   ShowAllPagesInArchive: true
   ShowPageNums: true
   ShowToc: true
 
   homeInfoParams:
-    Title: "Welcome"
+    Title: "Hello"
     Content: >
-      👋 Welcome to my personal website.
+      .NET full-stack developer by day, indie hacker & systems engineer at night.
   socialIcons:
       - name: github
         title: Maguire's Github
@@ -62,3 +62,5 @@ params:
       - name: LinkedIn
         title: Maguire's LinkedIn
         url: "https://www.linkedin.com/in/maguirekrist"
+      - name: email
+        url: "mailto:maguirekrist@gmail.com?subject=Hello%20from%20your%20site"
