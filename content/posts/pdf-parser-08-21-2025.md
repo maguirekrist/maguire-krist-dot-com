@@ -1,6 +1,6 @@
 ---
 title: "Filling the Gap: Building a High-Performance, Mutable AcroForm PDF Processor in .NET"
-summary: I built a C#/.NET PDF processor with performance in the same band as PDFPig—and added what I couldn’t find for free in .NET: **true in-memory, mutable AcroForms** you can edit and save. It powers my upcoming forms-over-data SaaS, **SubmitPath** (coming soon at **submitpath.com**).
+summary: "I built a C#/.NET PDF processor with performance in the same band as PDFPig—and added what I couldn’t find for free in .NET: **true in-memory, mutable AcroForms** you can edit and save. It powers my upcoming forms-over-data SaaS, **SubmitPath** (coming soon at **submitpath.com**)."
 date: 2025-08-21
 # series: ["PaperMod"]
 weight: 1
