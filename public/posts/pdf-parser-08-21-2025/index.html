@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en-us"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <meta name="description" content="I built a C#/.NET PDF processor with performance in the same band as PDFPig—and added what I couldn’t find for free in .NET: true in-memory, mutable AcroForms you can edit and save. It powers my upcoming forms-over-data SaaS, SubmitPath (coming soon at submitpath.com).">  
+
+  <title>
+    
+      Filling the Gap: Building a High-Performance, Mutable AcroForm PDF Processor in .NET
+    
+  </title>
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/" />
+  
+  
+  
+  <link rel="stylesheet" href="/css/main.900100e9dbee2d56c58fac8bb717037cae7e26a9c36c29d2ff587bdd65f0cbbe510b41d81a3bb234919cdfdc7550d786b2fab70c8fc507772d732fe097106d12.css" integrity="sha512-kAEA6dvuLVbFj6yLtxcDfK5&#43;JqnDbCnS/1h73WXwy75RC0HYGjuyNJGc39x1UNeGsvq3DI/FB3ctcy/glxBtEg==" />
+  
+</head>
+<body a="auto">
+        <main class="page-content" aria-label="Content">
+            <div class="w">
+                <div class="post-meta">
+                    <a href="/">..</a>
+
+                    <p>
+                        <time datetime="2025-08-21 00:00:00 &#43;0000 UTC">
+                            2025-08-21
+                        </time>
+                    </p>
+                </div>
+
+<article>
+    <h1>Filling the Gap: Building a High-Performance, Mutable AcroForm PDF Processor in .NET</h1>
+
+    
+
+    <blockquote>
+<p><strong>Summary:</strong> I built a C#/.NET PDF processor with performance in the same band as PDFPig—and added what I couldn’t find for free in .NET: <strong>true in-memory, mutable AcroForms</strong> you can edit and save. It powers my upcoming forms-over-data SaaS, <strong>SubmitPath</strong> (coming soon at <strong>submitpath.com</strong>).</p>
+</blockquote>
+<p>When every “free” .NET PDF library said <em>read-only</em> or <em>non-commercial only</em> for forms, I stopped hunting and built my own. The result: a lean, production-minded parser with a practical API, competitive throughput, and the one feature I needed most—<strong>edit AcroForm fields in memory and write the file back</strong>.</p>
+<hr>
+<h2 id="why-i-built-it">Why I built it</h2>
+<ul>
+<li>
+<p><strong>Real need:</strong> For <strong>SubmitPath</strong>, I needed reliable <strong>read + mutate</strong> of AcroForm fields in .NET without license traps.</p>
+</li>
+<li>
+<p><strong>Design goals:</strong></p>
+<ul>
+<li>Performance close to <strong>PDFPig</strong> on real documents</li>
+<li>Clean API focused on forms work (no acrobatics just to set a field)</li>
+<li>Minimal dependencies and debuggable code paths</li>
+</ul>
+</li>
+<li>
+<p><strong>Scope:</strong> Implement the PDF 1.7 pieces required for high-volume form handling, then round out the essentials for general parsing/inspection.</p>
+</li>
+</ul>
+<blockquote>
+<p>I referenced PDFPig’s <strong>API and capabilities</strong> while writing my own parser (no code copied).</p>
+</blockquote>
+<hr>
+<h2 id="what-it-does-today">What it does (today)</h2>
+<ul>
+<li>
+<p><strong>AcroForms you can actually change</strong></p>
+<ul>
+<li>Load a PDF, <strong>edit fields in memory</strong>, save back to disk/stream</li>
+<li>Preserve structure; avoid surprise reflows</li>
+</ul>
+</li>
+<li>
+<p><strong>Solid performance on common gov/enterprise PDFs</strong></p>
+<ul>
+<li>Competitive with PDFPig across a variety of real forms</li>
+</ul>
+</li>
+<li>
+<p><strong>Practical API surface</strong></p>
+<ul>
+<li>Document catalog, pages, objects, streams</li>
+<li>Read text + metadata</li>
+<li>Allocation-aware hot paths</li>
+</ul>
+</li>
+</ul>
+<h3 id="one-minute-api-taste-edit-a-form-and-save">One-minute API taste: edit a form and save</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csharp" data-lang="csharp"><span class="line"><span class="cl"><span class="kt">var</span> <span class="n">pdfData</span> <span class="p">=</span> <span class="n">File</span><span class="p">.</span><span class="n">ReadAllBytes</span><span class="p">(</span><span class="s">&#34;g-1145.pdf&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">var</span> <span class="n">parser</span> <span class="p">=</span> <span class="k">new</span> <span class="n">PdfParser</span><span class="p">(</span><span class="n">pdfData</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">var</span> <span class="n">document</span> <span class="p">=</span> <span class="n">parser</span><span class="p">.</span><span class="n">Parse</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="kt">var</span> <span class="n">form</span> <span class="p">=</span> <span class="n">document</span><span class="p">.</span><span class="n">GetAcroForm</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="kt">var</span> <span class="n">fields</span> <span class="p">=</span> <span class="n">document</span><span class="p">.</span><span class="n">GetFields</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Read</span>
+</span></span><span class="line"><span class="cl"><span class="kt">var</span> <span class="n">field</span> <span class="p">=</span> <span class="n">fields</span><span class="p">[</span><span class="m">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="kt">var</span> <span class="k">value</span> <span class="p">=</span> <span class="n">field</span><span class="p">.</span><span class="n">GetValueAsString</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Mutate</span>
+</span></span><span class="line"><span class="cl"><span class="n">field</span><span class="p">.</span><span class="n">SetValue</span><span class="p">(</span><span class="s">&#34;maguirekrist.com&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Save</span>
+</span></span><span class="line"><span class="cl"><span class="n">document</span><span class="p">.</span><span class="n">Save</span><span class="p">(</span><span class="s">&#34;g-1145.filled.pdf&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><hr>
+<h2 id="benchmarks-quick-look">Benchmarks (quick look)</h2>
+<blockquote>
+<p>Hardware/runtime/build flags affect absolute values; the target is <strong>same-order performance</strong> as PDFPig on real forms.</p>
+</blockquote>
+<p><strong>Aggregate across 20 PDFs</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>Metric</th>
+          <th style="text-align: right">Value</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Documents</td>
+          <td style="text-align: right">20</td>
+      </tr>
+      <tr>
+          <td>p50 elapsed</td>
+          <td style="text-align: right"><strong>9.46 ms</strong></td>
+      </tr>
+      <tr>
+          <td>p95 elapsed</td>
+          <td style="text-align: right"><strong>68.15 ms</strong></td>
+      </tr>
+      <tr>
+          <td>Peak working set</td>
+          <td style="text-align: right"><strong>66.2 MB</strong></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Selected files — elapsed (ms), working set (MB)</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>File</th>
+          <th style="text-align: right">Size</th>
+          <th style="text-align: right">Ours (ms)</th>
+          <th style="text-align: right">PDFPig (ms)</th>
+          <th style="text-align: right">Working Set (MB)</th>
+          <th>Notes</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>i-9.pdf</code></td>
+          <td style="text-align: right">524 KB</td>
+          <td style="text-align: right">46.37</td>
+          <td style="text-align: right">46.47</td>
+          <td style="text-align: right">~58</td>
+          <td>parity</td>
+      </tr>
+      <tr>
+          <td><code>GSA_1241.pdf</code></td>
+          <td style="text-align: right">574 KB</td>
+          <td style="text-align: right">13.97</td>
+          <td style="text-align: right">15.43</td>
+          <td style="text-align: right">~61</td>
+          <td>ours faster</td>
+      </tr>
+      <tr>
+          <td><code>GSA_1535.pdf</code></td>
+          <td style="text-align: right">370 KB</td>
+          <td style="text-align: right">21.78</td>
+          <td style="text-align: right">22.98</td>
+          <td style="text-align: right">~60.5</td>
+          <td>parity</td>
+      </tr>
+      <tr>
+          <td><code>td1-fill-25e.pdf</code></td>
+          <td style="text-align: right">235 KB</td>
+          <td style="text-align: right">8.76</td>
+          <td style="text-align: right">9.78</td>
+          <td style="text-align: right">~61.7</td>
+          <td>ours faster</td>
+      </tr>
+      <tr>
+          <td><code>GSA_1241E.pdf</code></td>
+          <td style="text-align: right">582 KB</td>
+          <td style="text-align: right">4.75</td>
+          <td style="text-align: right">4.13</td>
+          <td style="text-align: right">~60.5</td>
+          <td>pig faster</td>
+      </tr>
+      <tr>
+          <td><code>i-130.pdf</code></td>
+          <td style="text-align: right">733 KB</td>
+          <td style="text-align: right">59.82</td>
+          <td style="text-align: right">65.68</td>
+          <td style="text-align: right">~62.2</td>
+          <td>ours faster</td>
+      </tr>
+      <tr>
+          <td><code>fw9.pdf</code></td>
+          <td style="text-align: right">141 KB</td>
+          <td style="text-align: right">13.48</td>
+          <td style="text-align: right">9.79</td>
+          <td style="text-align: right">~74.1</td>
+          <td>pig faster</td>
+      </tr>
+      <tr>
+          <td><code>g-1145.pdf</code></td>
+          <td style="text-align: right">251 KB</td>
+          <td style="text-align: right">52.04</td>
+          <td style="text-align: right">2.71</td>
+          <td style="text-align: right">~48.8</td>
+          <td>outlier to improve</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>High-level takeaways</strong></p>
+<ul>
+<li>Many docs land in the <strong>same performance band</strong> as PDFPig; some favor us, some favor PDFPig.</li>
+<li>Small, trivial PDFs expose fixed overhead.</li>
+<li>A few outliers (e.g., <code>g-1145.pdf</code>) point to branches I can optimize.</li>
+<li><strong>Memory</strong> stays modest across runs (peak WS ~<strong>66 MB</strong> in these tests).</li>
+</ul>
+<!-- raw HTML omitted -->
+<pre tabindex="0"><code>file	size_bytes	elapsed_ms	alloc_bytes	working_set_mb
+g-1145.pdf	250968	224.653	2247392	48.4
+GSA1364A-1-16d.pdf	764626	23.312	4023096	53.1
+multi_text.pdf	938	0.410	19432	53.1
+ssa-89.pdf	52702	4.077	1489160	54.6
+A4.pdf	752	0.131	17072	54.7
+two_pager.pdf	1109	0.174	26352	54.7
+test_me.pdf	954	0.335	25944	54.8
+i-9.pdf	524095	48.708	14263608	58.0
+Resume.pdf	121157	1.409	533864	58.5
+GSA_1241E.pdf	581988	8.885	2279296	58.7
+GSA_1535.pdf	370402	23.625	5221776	61.0
+GSA_1241.pdf	574277	13.290	1534672	62.0
+td1-fill-25e.pdf	235182	9.025	2938592	62.0
+GSA_14.pdf	520126	16.194	2729576	62.0
+GSA_1226.pdf	307366	7.955	976040	62.1
+i-130.pdf	732985	59.914	23776408	62.6
+fw9.pdf	140815	8.199	3415616	62.6
+GSA_1380.pdf	330983	9.889	1576328	63.8
+GSA1364WH-16d.pdf	824543	33.188	6865936	66.0
+GSA_1181.pdf	289178	17.711	4023424	66.2
+
+Count=20  p50=9.46 ms  p95=68.15 ms  PeakRSS=66.2 MB
+</code></pre><pre tabindex="0"><code>processor	file	size_bytes	elapsed_ms	alloc_bytes	working_set_mb
+Ours	g-1145.pdf	250968	52.039	2247392	48.8
+PdfPig	g-1145.pdf	250968	2.707	1880880	48.8
+Ours	GSA1364A-1-16d.pdf	764626	23.835	4023096	52.8
+PdfPig	GSA1364A-1-16d.pdf	764626	23.141	4023096	52.8
+Ours	multi_text.pdf	938	0.808	19432	56.0
+PdfPig	multi_text.pdf	938	0.099	19432	56.0
+Ours	ssa-89.pdf	52702	6.424	1498256	56.3
+PdfPig	ssa-89.pdf	52702	3.459	1453096	56.3
+Ours	A4.pdf	752	0.129	17072	56.3
+PdfPig	A4.pdf	752	0.080	17072	56.3
+Ours	two_pager.pdf	1109	0.145	26352	56.3
+PdfPig	two_pager.pdf	1109	0.113	26352	56.3
+Ours	test_me.pdf	954	0.361	25944	56.3
+PdfPig	test_me.pdf	954	0.111	25872	56.3
+Ours	i-9.pdf	524095	46.368	14263608	57.9
+PdfPig	i-9.pdf	524095	46.466	14394648	57.9
+Ours	Resume.pdf	121157	1.136	533864	60.4
+PdfPig	Resume.pdf	121157	1.042	533864	60.4
+Ours	GSA_1241E.pdf	581988	4.751	2279296	60.5
+PdfPig	GSA_1241E.pdf	581988	4.125	2279296	60.5
+Ours	GSA_1535.pdf	370402	21.776	5221776	60.5
+PdfPig	GSA_1535.pdf	370402	22.979	5221776	60.5
+Ours	GSA_1241.pdf	574277	13.968	1534672	61.0
+PdfPig	GSA_1241.pdf	574277	15.434	1535504	61.0
+Ours	td1-fill-25e.pdf	235182	8.759	2938680	61.7
+PdfPig	td1-fill-25e.pdf	235182	9.779	2456528	61.7
+Ours	GSA_14.pdf	520126	15.585	2729576	61.7
+PdfPig	GSA_14.pdf	520126	15.425	2729576	61.7
+Ours	GSA_1226.pdf	307366	7.793	976040	61.7
+PdfPig	GSA_1226.pdf	307366	8.271	976040	61.7
+Ours	i-130.pdf	732985	59.821	23808936	62.2
+PdfPig	i-130.pdf	732985	65.676	23114720	62.2
+Ours	fw9.pdf	140815	13.484	3415616	74.1
+PdfPig	fw9.pdf	140815	9.793	3411832	74.1
+Ours	GSA_1380.pdf	330983	11.408	1576328	76.4
+PdfPig	GSA_1380.pdf	330983	13.161	1576352	76.4
+Ours	GSA1364WH-16d.pdf	824543	40.708	6997032	75.2
+PdfPig	GSA1364WH-16d.pdf	824543	38.831	6865936	75.2
+Ours	GSA_1181.pdf	289178	16.527	4023424	73.4
+PdfPig	GSA_1181.pdf	289178	18.282	4023424	73.4
+</code></pre><!-- raw HTML omitted -->
+<hr>
+<h2 id="how-it-works-high-level">How it works (high-level)</h2>
+<ul>
+<li><strong>Parser pipeline:</strong> xref/trailer → object table → stream decoding → content parsing</li>
+<li><strong>AcroForm model:</strong> typed in-memory field objects (text, checkbox, radio, combos) with setters that update dictionaries, appearances (where present), and incremental write</li>
+<li><strong>Writer:</strong> conservative PDF 1.7 writer; no linearization/compression yet (clarity first)</li>
+<li><strong>Performance posture:</strong> eager object materialization for simplicity + fast random access; allocation-aware hot loops</li>
+</ul>
+<hr>
+<h2 id="real-world-use-powering-submitpath">Real-world use: powering <strong>SubmitPath</strong></h2>
+<p>This engine drives <strong>SubmitPath</strong>, a forms-over-data platform. Typical flow:</p>
+<ol>
+<li>Load government/firm PDF forms (AcroForm).</li>
+<li>Bind fields to data (from CRM/HRIS/user input).</li>
+<li>Validate and <strong>write a filled PDF</strong> for signature or archive.</li>
+</ol>
+<p>The <strong>mutable AcroForm</strong> capability—without paid licensing—is the difference between prototype and production for my use case.</p>
+<hr>
+<h2 id="roadmap">Roadmap</h2>
+<ul>
+<li><strong>Encryption:</strong> broader crypto support; user-supplied password API</li>
+<li><strong>Large files:</strong> I/O buffering or memory-mapped reads for <strong>&gt;2 GB</strong></li>
+<li><strong>Lazy parsing modes:</strong> avoid full object materialization when not needed</li>
+<li><strong>Writer:</strong> compression, linearization, object streams</li>
+<li><strong>Layout/OCR:</strong> document layout analysis + OCR hooks</li>
+<li><strong>Richer mutability:</strong> add text/shapes/images; image extraction &amp; modification</li>
+<li><strong>General polish:</strong> more spec corners as they matter to SubmitPath</li>
+</ul>
+<hr>
+<h2 id="closing">Closing</h2>
+<p>This started as “I just need <strong>mutable AcroForms</strong> in .NET,” and became a <strong>fast, practical PDF processor</strong> that holds its own next to mature libraries—purpose-built for forms. I plan to open-source the core under <strong>MIT</strong> (web app code stays private) and continue growing features as <strong>SubmitPath</strong> needs them.</p>
+<p><strong>Interested in the parser or the SaaS?</strong></p>
+<ul>
+<li>Ping me for a deep dive, profiles, or code review.</li>
+<li>Watch <strong>submitpath.com</strong> for launch updates.</li>
+</ul>
+
+</article>
+
+            </div>
+        </main>
+    </body></html>

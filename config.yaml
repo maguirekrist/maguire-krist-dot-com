@@ -1,7 +1,7 @@
 baseURL: https://maguirekrist.com/
 languageCode: en-us
 title: Maguire Krist
-theme: ["PaperMod"]
+theme: ["nostyleplease"]
 
 enableInlineShortcodes: true
 enableRobotsTXT: true
