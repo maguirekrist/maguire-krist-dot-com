@@ -1,0 +1,15 @@
+---
+const googleCode = import.meta.env.GOOGLE_ANALYTICS;
+const googleSource = `https://www.googletagmanager.com/gtag/js?id=${googleCode}`;
+---
+
+<script async src={googleSource}></script>
+<script define:vars={{ googleCode }}>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+
+    gtag("config", googleCode);
+</script>

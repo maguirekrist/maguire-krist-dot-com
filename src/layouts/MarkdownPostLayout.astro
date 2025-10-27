@@ -1,0 +1,15 @@
+---
+import '../styles/global.css';
+const { frontmatter } = Astro.props; 
+---
+
+<div style="display:flex;gap: 8px;">
+    <a href="/">Home</a> <div class="margin-left: 4px; margin-right: 4px">/</div> <a href="/blog">Blog</a>
+</div>
+<meta charset="utf-8">
+<h1>{frontmatter.title}</h1>
+<p>{frontmatter.pubDate.toString().slice(0,10)}</p>
+<p><em>{frontmatter.description}</em></p>
+<p>Written by: {frontmatter.author}</p>
+
+<slot />

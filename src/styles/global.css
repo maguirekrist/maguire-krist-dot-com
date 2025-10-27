@@ -1,0 +1,29 @@
+html {
+  background-color: #f1f5f9;
+  font-family: sans-serif;
+}
+
+body {
+    padding: 20px;
+    margin: auto;
+    max-width: 70ch;
+    line-height: 1.5;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.nav-menu a {
+    display: block;
+}
+
+.base-title {
+    margin: 0px;
+}
+.base-tagline {
+    margin: 0px;
+}

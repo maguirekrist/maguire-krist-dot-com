@@ -1,0 +1,27 @@
+---
+type Social = {
+    title: string;
+    url: string
+};
+
+const socials: Social[] = [
+    {
+        title: 'Linkedin',
+        url: 'https://www.linkedin.com/in/maguirekrist/'
+    },
+    {
+        title: 'Github',
+        url: 'https://github.com/maguirekrist'
+    },
+    {
+        title: 'X',
+        url: 'https://x.com/maguirekrist'
+    }
+];
+
+---
+
+<h4>Find me on</h4>
+<ul>
+    {socials.map(ele => <li><a href={ele.url} target="_blank" rel="noopener noreferrer">{ele.title}</a></li>)}
+</ul>
