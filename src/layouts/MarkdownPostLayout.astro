@@ -1,15 +1,26 @@
 ---
+import Analytics from '../components/Analytics.astro';
 import '../styles/global.css';
 const { frontmatter } = Astro.props; 
 ---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{frontmatter.title}</title>
+        <Analytics />
+	</head>
+    <body>
+        <div style="display:flex;gap: 8px;">
+            <a href="/">Home</a> <div class="margin-left: 4px; margin-right: 4px">/</div> <a href="/blog">Blog</a>
+        </div>
+        <meta charset="utf-8">
+        <h1 style="margin-bottom: 4px;">{frontmatter.title}</h1>
+        <p style="margin: 0px;">{frontmatter.pubDate.toString().slice(0,10)}</p>
+        <!-- <p><em>{frontmatter.description}</em></p> -->
 
-<div style="display:flex;gap: 8px;">
-    <a href="/">Home</a> <div class="margin-left: 4px; margin-right: 4px">/</div> <a href="/blog">Blog</a>
-</div>
-<meta charset="utf-8">
-<h1>{frontmatter.title}</h1>
-<p>{frontmatter.pubDate.toString().slice(0,10)}</p>
-<p><em>{frontmatter.description}</em></p>
-<p>Written by: {frontmatter.author}</p>
-
-<slot />
+        <slot />
+    </body>
+</html>

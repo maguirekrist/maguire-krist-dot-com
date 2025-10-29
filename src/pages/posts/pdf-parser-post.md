@@ -1,16 +1,14 @@
 ---
 layout: ../../layouts/MarkdownPostLayout.astro
 title: "Filling the Gap: Building a High-Performance, Mutable AcroForm PDF Processor in .NET"
-description: "I built a C#/.NET PDF processor with performance in the same band as PDFPig—and added what I couldn’t find for free in .NET: **true in-memory, mutable AcroForms** you can edit and save. It powers my upcoming forms-over-data SaaS, **SubmitPath** (coming soon at **submitpath.com**)."
+description: "I built a C#/.NET PDF processor with performance in the same band as PDFPig - and added what I couldn’t find for free in .NET: **true in-memory, mutable AcroForms** you can edit and save. It powers my upcoming forms-over-data SaaS, **SubmitPath** (coming soon at **submitpath.com**)."
 author: 'Maguire Krist'
 pubDate: 2025-08-21
 tags: ["blog", "pdf"]
 ---
 
-> **Summary:** I built a C#/.NET PDF processor with performance in the same band as PDFPig—and added what I couldn’t find for free in .NET: **true in-memory, mutable AcroForms** you can edit and save. It powers my upcoming forms-over-data SaaS, **SubmitPath** (coming soon at **submitpath.com**).
 
-
-When every “free” .NET PDF library said *read-only* or *non-commercial only* for forms, I stopped hunting and built my own. The result: a lean, production-minded parser with a practical API, competitive throughput, and the one feature I needed most—**edit AcroForm fields in memory and write the file back**.
+When every free .NET PDF library said *read-only* or *non-commercial only* for forms, I stopped hunting and built my own. The result: a lean, production-minded parser with a practical API, competitive throughput, and the one feature I needed most — **edit AcroForm fields in memory and write the file back**.
 
 ---
 

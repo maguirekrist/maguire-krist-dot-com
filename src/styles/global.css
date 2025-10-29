@@ -1,5 +1,6 @@
 html {
-  background-color: #f1f5f9;
+  background-color: #f8f8f8;
+  color: rgb(68, 68, 68);
   font-family: sans-serif;
 }
 
@@ -8,6 +9,10 @@ body {
     margin: auto;
     max-width: 70ch;
     line-height: 1.5;
+}
+
+a {
+    color: #0059ce;
 }
 
 .nav-menu {
@@ -19,6 +24,12 @@ body {
 
 .nav-menu a {
     display: block;
+    color: #0059ce;
+    text-decoration: none;
+}
+
+.nav-menu .active {
+    border-bottom: 2px solid #0059ce;
 }
 
 .base-title {

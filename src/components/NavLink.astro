@@ -1,0 +1,6 @@
+---
+const { isActive, url, title } = Astro.props;
+---
+
+
+<a class:list={[{ active: isActive }]} href={url}>{title}</a>
