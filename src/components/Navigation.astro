@@ -3,9 +3,11 @@ import '../styles/global.css'
 import NavLink from './NavLink.astro';
 
 const currentPath = Astro.url.pathname;
+const endPath = currentPath.split('/').filter(x => x != '');
+const path = endPath[endPath.length - 1] ?? '';
 ---
 <div class="nav-menu">
-    <NavLink url="/" title="Home" isActive={currentPath == "/"} />
-    <NavLink url="/about" title="About" isActive={currentPath == "/about"} />
-    <NavLink url="/blog" title="Blog" isActive={currentPath == "/blog"} />
+    <NavLink url="/" title="Home" isActive={path == ""} />
+    <NavLink url="/about" title="About" isActive={path == "about"} />
+    <NavLink url="/blog" title="Blog" isActive={path == "blog"} />
 </div>
